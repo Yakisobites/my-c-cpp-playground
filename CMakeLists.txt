@@ -46,3 +46,7 @@ target_link_libraries(add_tests PRIVATE
 )
 
 gtest_discover_tests(add_tests)
+
+if (MSVC)
+    add_compile_options(/utf-8)
+endif()
