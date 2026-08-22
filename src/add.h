@@ -5,6 +5,10 @@
 #ifndef ADD_H
 #define ADD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief 2つの整数を加算します。
  *
@@ -15,5 +19,9 @@
  * この関数は、整数の加算を行う基本的な関数です。オーバーフローのチェックは行いませんので、使用する際には注意してください。
  */
 int add(int a, int b);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // ADD_H

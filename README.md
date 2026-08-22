@@ -1,6 +1,6 @@
 # my-c-cpp-playground
 
-This is my C/C++ playgounrd repogitory.
+This is my C/C++ playgounrd repository.
 
 ## C language + GoogleTest (CMake)
 

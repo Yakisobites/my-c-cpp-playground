@@ -9,10 +9,10 @@
         "${workspaceFolder}/build/_deps/googletest-src/googletest"
     ],
     "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, IndentWidth: 4, ColumnLimit: 100, SortIncludes: false }",
-    "C_Cpp.clang_format_path": "C:/Program Files/LLVM/bin/clang-format.exe",
+    "C_Cpp.clang_format_path": "clang-format",
     "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "C_Cpp.codeAnalysis.clangTidy.checks": "*",
-    "clang-format.executable": "C:/Program Files/LLVM/bin/clang-format.exe",
+    "clang-format.executable": "clang-format",
     "cmake.configureArgs": [
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ],
