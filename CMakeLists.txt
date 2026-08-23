@@ -27,9 +27,15 @@ include(GoogleTest)
 
 add_library(add STATIC
   src/add.c
-  src/reversi.c
 )
 target_include_directories(add PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+add_library(reversi STATIC
+  src/reversi.c
+)
+target_include_directories(reversi PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -37,6 +43,7 @@ add_executable(app
   src/main.c
 )
 target_link_libraries(app PRIVATE add)
+target_link_libraries(app PRIVATE reversi)
 
 add_executable(add_tests
   tests/add_test.cpp
@@ -47,6 +54,16 @@ target_link_libraries(add_tests PRIVATE
 )
 
 gtest_discover_tests(add_tests)
+
+add_executable(reversi_tests
+  tests/reversi_test.cpp
+)
+target_link_libraries(reversi_tests PRIVATE
+  reversi
+  GTest::gtest_main
+)
+
+gtest_discover_tests(reversi_tests)
 
 if (MSVC)
     add_compile_options(/utf-8)

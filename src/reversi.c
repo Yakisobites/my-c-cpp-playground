@@ -3,200 +3,106 @@
 
 void clear_screen(void) { printf("\x1b[1J\x1b[1;1H"); }
 
-void init_board(int board[BOARD_SIZE][BOARD_SIZE]) {
+static CellState get_opponent(CellState player) {
+  return (player == BLACK) ? WHITE : BLACK;
+}
+
+void init_game(GameState *game) {
   for (int i = 0; i < BOARD_SIZE; i++) {
     for (int j = 0; j < BOARD_SIZE; j++) {
-      board[i][j] = EMPTY;
+      game->board[i][j] = EMPTY;
     }
   }
-  board[3][3] = WHITE;
-  board[4][4] = WHITE;
-  board[3][4] = BLACK;
-  board[4][3] = BLACK;
+  game->board[3][3] = WHITE;
+  game->board[4][4] = WHITE;
+  game->board[3][4] = BLACK;
+  game->board[4][3] = BLACK;
+  game->current_player = BLACK;
 }
 
-void print_board(int board[BOARD_SIZE][BOARD_SIZE]) {
-  printf("--- Reversi ---\n\n");
-  printf("  0 1 2 3 4 5 6 7\n");
-  for (int i = 0; i < BOARD_SIZE; i++) {
-    printf("%d ", i);
-    for (int j = 0; j < BOARD_SIZE; j++) {
-      if (board[i][j] == BLACK)
-        printf("X ");
-      else if (board[i][j] == WHITE)
-        printf("O ");
-      else
-        printf(". ");
-    }
-    printf("\n");
+int is_out_of_bounds(const GameState *game, Position pos) {
+  if (pos.row < 0 || pos.row >= BOARD_SIZE || pos.col < 0 ||
+      pos.col >= BOARD_SIZE) {
+    return TRUE; // Out of bounds
   }
-  printf("\n");
+  // Additional logic to check if the move is valid according to Reversi rules
+  // can be added here.
+  return FALSE; // For now, just check if the cell is empty and within bounds
 }
 
-// 8方向（上、下、左、右、左上、右上、左下、右下）への移動量
-const int DX[8] = {0, 0, -1, 1, -1, 1, -1, 1};
-const int DY[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+int is_not_empty(const GameState *game, Position pos) {
+  if (game->board[pos.row][pos.col] != EMPTY) {
+    return TRUE;
+  }
+  return FALSE;
+}
 
-// 指定したマス(r, c)に player が石を置けるか判定（置ければ1、置けなければ0）
-int can_place(int board[BOARD_SIZE][BOARD_SIZE], int r, int c, int player) {
-  if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE)
-    return 0;
-  if (board[r][c] != EMPTY)
-    return 0;
+int is_valid_move(const GameState *game, Position pos) {
+  if (is_out_of_bounds(game, pos)) {
+    return FALSE;
+  }
+  if (is_not_empty(game, pos)) {
+    return FALSE;
+  }
+  // Additional logic to check if the move is valid according to Reversi rules
+  // can be added here.
+  return TRUE; // For now, just check if the cell is empty and within bounds
+}
 
-  int opponent = (player == BLACK) ? WHITE : BLACK;
+static int flip_direction(GameState *game, Position pos, Direction dir) {
+  CellState player = game->current_player;
+  CellState opponent = get_opponent(player);
 
-  for (int d = 0; d < 8; d++) {
-    int nr = r + DY[d];
-    int nc = c + DX[d];
-    int count = 0;
+  Position cur = {pos.row + dir.row_delta, pos.col + dir.col_delta};
+  int count = 0;
 
-    // 相手の石が続く限り進む
-    while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE &&
-           board[nr][nc] == opponent) {
-      nr += DY[d];
-      nc += DX[d];
+  while (!is_out_of_bounds(game, cur)) {
+    if (game->board[cur.row][cur.col] == opponent) {
       count++;
-    }
-
-    // 相手の石が1個以上あり、その先に自分の石があれば設置可能
-    if (count > 0 && nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE &&
-        board[nr][nc] == player) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-// 石を配置し、8方向の相手の石を裏返す
-void place_and_flip(int board[BOARD_SIZE][BOARD_SIZE], int r, int c,
-                    int player) {
-  int opponent = (player == BLACK) ? WHITE : BLACK;
-  board[r][c] = player;
-
-  for (int d = 0; d < 8; d++) {
-    int nr = r + DY[d];
-    int nc = c + DX[d];
-    int count = 0;
-
-    while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE &&
-           board[nr][nc] == opponent) {
-      nr += DY[d];
-      nc += DX[d];
-      count++;
-    }
-
-    if (count > 0 && nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE &&
-        board[nr][nc] == player) {
-      int fr = r + DY[d];
-      int fc = c + DX[d];
-      // 自分の石にたどり着くまで裏返していく
-      while (board[fr][fc] == opponent) {
-        board[fr][fc] = player;
-        fr += DY[d];
-        fc += DX[d];
+    } else if (game->board[cur.row][cur.col] == player) {
+      if (count > 0) {
+        Position flip = {pos.row + dir.row_delta, pos.col + dir.col_delta};
+        while (flip.row != cur.row || flip.col != cur.col) {
+          game->board[flip.row][flip.col] = player;
+          flip.row += dir.row_delta;
+          flip.col += dir.col_delta;
+        }
       }
+      return count;
+    } else {
+      break;
     }
-  }
-}
-
-// プレイヤーが置ける場所が1マスでも存在するか判定
-int has_valid_move(int board[BOARD_SIZE][BOARD_SIZE], int player) {
-  for (int r = 0; r < BOARD_SIZE; r++) {
-    for (int c = 0; c < BOARD_SIZE; c++) {
-      if (can_place(board, r, c, player)) {
-        return 1;
-      }
-    }
+    cur.row += dir.row_delta;
+    cur.col += dir.col_delta;
   }
   return 0;
 }
 
-// 盤面上の黒石・白石の数をカウント
-void count_pieces(int board[BOARD_SIZE][BOARD_SIZE], int *black_count,
-                  int *white_count) {
-  *black_count = 0;
-  *white_count = 0;
-
-  for (int r = 0; r < BOARD_SIZE; r++) {
-    for (int c = 0; c < BOARD_SIZE; c++) {
-      if (board[r][c] == BLACK)
-        (*black_count)++;
-      else if (board[r][c] == WHITE)
-        (*white_count)++;
-    }
+MoveResult game_place_piece(GameState *game, Position pos) {
+  if (is_out_of_bounds(game, pos)) {
+    return MOVE_OUT_OF_BOUNDS;
   }
+
+  if (is_not_empty(game, pos)) {
+    return MOVE_CELL_NOT_EMPTY;
+  }
+
+  Direction directions[] = {{1, 0},  {-1, -1}, {0, -1}, {1, -1},
+                            {-1, 0}, {-1, 1},  {0, 1},  {1, 1}};
+
+  int total_flipped = 0;
+  for (int i = 0; i < 8; i++) {
+    total_flipped += flip_direction(game, pos, directions[i]);
+  }
+
+  if (total_flipped == 0) {
+    return MOVE_NO_FLIP;
+  }
+
+  game->board[pos.row][pos.col] = game->current_player;
+  game->current_player = get_opponent(game->current_player);
+
+  return MOVE_SUCCESS;
 }
 
-int play_reversi(void) {
-  int board[BOARD_SIZE][BOARD_SIZE];
-  int current_player = BLACK;
-  int pass_count = 0;
-
-  init_board(board);
-
-  while (pass_count < 2) {
-    clear_screen();
-    print_board(board);
-
-    // 置ける場所がない場合はパス処理
-    if (!has_valid_move(board, current_player)) {
-      printf("Player %s has no valid moves. Pass!\n",
-             (current_player == BLACK) ? "BLACK (X)" : "WHITE (O)");
-      printf("Press Enter to continue...");
-      while (getchar() != '\n')
-        ;
-      getchar();
-
-      pass_count++;
-      current_player = (current_player == BLACK) ? WHITE : BLACK;
-      continue;
-    }
-
-    // 1手でも指せたらパスのカウントをリセット
-    pass_count = 0;
-
-    printf("Player: %s\n",
-           (current_player == BLACK) ? "BLACK (X)" : "WHITE (O)");
-    printf("Enter row and column (e.g. 2 3): ");
-
-    int r, c;
-    if (scanf("%d %d", &r, &c) != 2) {
-      while (getchar() != '\n')
-        ;
-      continue;
-    }
-
-    if (!can_place(board, r, c, current_player)) {
-      printf("Invalid move! Press Enter to try again...");
-      while (getchar() != '\n')
-        ;
-      getchar();
-      continue;
-    }
-
-    place_and_flip(board, r, c, current_player);
-    current_player = (current_player == BLACK) ? WHITE : BLACK;
-  }
-
-  // --- ゲーム終了処理 ---
-  clear_screen();
-  print_board(board);
-
-  int black_count, white_count;
-  count_pieces(board, &black_count, &white_count);
-
-  printf("=== GAME OVER ===\n");
-  printf("BLACK (X): %d\n", black_count);
-  printf("WHITE (O): %d\n\n", white_count);
-
-  if (black_count > white_count) {
-    printf("Winner: BLACK (X)!\n");
-  } else if (white_count > black_count) {
-    printf("Winner: WHITE (O)!\n");
-  } else {
-    printf("Draw!\n");
-  }
-
-  return 0;
-}
+int play_reversi(void) { return 0; }
