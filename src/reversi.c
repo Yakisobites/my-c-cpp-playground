@@ -210,7 +210,7 @@ static Position get_user_input(void) {
   return pos;
 }
 
-void display_results(const GameState *game) {
+static void display_results(const GameState *game) {
   GameResultDetails result = game_get_result(game);
   if (result.result == BLACK_WIN) {
     printf("Black wins!\n");
