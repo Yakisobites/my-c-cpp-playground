@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static const int AI_MOVE_DELAY_MS = 500;
+
 static void clear_screen(void) { printf("\x1b[1J\x1b[1;1H"); }
 
 static void print_board(GameState *game) {
@@ -93,6 +95,11 @@ static int flip_direction(GameState *game, Position pos, Direction dir) {
   return 0;
 }
 
+static const Direction directions[] = {{1, 0},  {-1, -1}, {0, -1}, {1, -1},
+                                       {-1, 0}, {-1, 1},  {0, 1},  {1, 1}};
+
+static const int NUM_DIRECTIONS = sizeof(directions) / sizeof(directions[0]);
+
 MoveResult game_place_piece(GameState *game, Position pos) {
   if (is_out_of_bounds(game, pos)) {
     return MOVE_OUT_OF_BOUNDS;
@@ -102,11 +109,8 @@ MoveResult game_place_piece(GameState *game, Position pos) {
     return MOVE_CELL_NOT_EMPTY;
   }
 
-  Direction directions[] = {{1, 0},  {-1, -1}, {0, -1}, {1, -1},
-                            {-1, 0}, {-1, 1},  {0, 1},  {1, 1}};
-
   int total_flipped = 0;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < NUM_DIRECTIONS; i++) {
     total_flipped += flip_direction(game, pos, directions[i]);
   }
 
@@ -240,7 +244,7 @@ int play_reversi(void) {
     if (game.current_player == BLACK) {
       // player (black) makes a move
       // move = get_user_input();
-      sleep_ms(500); // Simulate a delay for the player's move
+      sleep_ms(AI_MOVE_DELAY_MS); // Simulate a delay for the player's move
       move = select_random_move(&valid_moves); // For testing, we can use random
                                                // move for black as well
     } else {
