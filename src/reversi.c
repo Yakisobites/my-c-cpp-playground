@@ -23,6 +23,8 @@ static void print_board(GameState *game) {
     printf("\n");
   }
   printf("\n");
+  GameResultDetails result = game_get_result(game);
+  printf("Black: %d, White: %d\n", result.black_count, result.white_count);
 }
 
 static CellState get_opponent(CellState player) {
@@ -163,12 +165,6 @@ Bool game_pass(GameState *game) {
 
 GameResultDetails game_get_result(const GameState *game) {
   GameResultDetails result;
-  if (game->consecutive_passes < 2) {
-    result.result = GAME_CONTINUE;
-    result.black_count = 0;
-    result.white_count = 0;
-    return result;
-  }
 
   int black_count = 0;
   int white_count = 0;
@@ -181,6 +177,13 @@ GameResultDetails game_get_result(const GameState *game) {
         white_count++;
       }
     }
+  }
+
+  if (game->consecutive_passes < 2) {
+    result.result = GAME_CONTINUE;
+    result.black_count = black_count;
+    result.white_count = white_count;
+    return result;
   }
 
   if (black_count > white_count) {
