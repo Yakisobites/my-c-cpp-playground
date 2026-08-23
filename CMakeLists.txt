@@ -33,6 +33,7 @@ target_include_directories(add PUBLIC
 )
 
 add_library(reversi STATIC
+  src/sleep.c
   src/reversi.c
 )
 target_include_directories(reversi PUBLIC

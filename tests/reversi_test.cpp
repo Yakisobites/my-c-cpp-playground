@@ -43,8 +43,6 @@ TEST(GameTest, PlaceDiskAndSwitchPlayer) {
   6 . . . . . . . .
   7 . . . . . . . .
   */
-  // Position pos = {2, 3};
-  // MoveResult result = game_place_piece(&game, pos);
 
   EXPECT_EQ(MOVE_SUCCESS, game_place_piece(&game, {2, 3}));
   EXPECT_EQ(game.board[2][3], BLACK);
@@ -65,6 +63,48 @@ TEST(GameTest, PlaceDiskAndSwitchPlayer) {
   EXPECT_EQ(game.board[0][0], EMPTY);
   EXPECT_EQ(game.board[3][3], WHITE);
   EXPECT_EQ(game.current_player, BLACK);
+}
 
-  // EXPECT_TRUE(result);
+TEST(GameTest, GetValidMovesInitialState) {
+  GameState game;
+  init_game(&game);
+
+  PositionList list = game_get_valid_moves(&game);
+  EXPECT_EQ(list.count, 4);
+}
+
+TEST(GameTest, ConsecutivePassesEndGame) {
+  GameState game;
+  init_game(&game);
+
+  // create a board where no valid moves are available for either player
+  for (int r = 0; r < BOARD_SIZE; r++) {
+    for (int c = 0; c < BOARD_SIZE; c++) {
+      game.board[r][c] = (c < 4) ? BLACK : WHITE;
+    }
+  }
+
+  // it is expected that the first pass will succeed because there are no valid
+  // moves for the current player. The consecutive_passes counter should
+  // increment to 1, and the game should continue.
+  EXPECT_TRUE(game_pass(&game));
+  EXPECT_EQ(game.consecutive_passes, 1);
+  EXPECT_EQ(game_get_result(&game).result, GAME_CONTINUE);
+
+  // it is expected that the second pass will also succeed because there are no
+  // valid moves for the opponent.
+  EXPECT_TRUE(game_pass(&game));
+  EXPECT_EQ(game.consecutive_passes, 2);
+
+  // it is expected that the game ends after two consecutive passes (black 32
+  // discs, white 32 discs, resulting in a draw)
+  EXPECT_EQ(game_get_result(&game).result, DRAW);
+}
+
+TEST(GameTest, CannotPassWhenValidMoveExists) {
+  GameState game;
+  init_game(&game);
+
+  // Failed to pass when valid moves exist
+  EXPECT_EQ(game_pass(&game), FALSE);
 }
