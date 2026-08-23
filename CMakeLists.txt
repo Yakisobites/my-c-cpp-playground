@@ -27,6 +27,7 @@ include(GoogleTest)
 
 add_library(add STATIC
   src/add.c
+  src/reversi.c
 )
 target_include_directories(add PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
