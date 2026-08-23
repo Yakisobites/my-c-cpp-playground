@@ -38,7 +38,6 @@ typedef struct {
   int count;
 } PositionList;
 
-void clear_screen(void);
 void init_game(GameState *game);
 Bool is_out_of_bounds(const GameState *game, Position pos);
 Bool is_not_empty(const GameState *game, Position pos);

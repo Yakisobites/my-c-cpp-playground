@@ -5,7 +5,6 @@ extern "C" {
 }
 
 TEST(CoreReversiTest, CanPlaceOnEmptyCell) {
-  CellState board[BOARD_SIZE][BOARD_SIZE];
   GameState game;
   init_game(&game);
   EXPECT_EQ(BLACK, game.current_player);
@@ -18,11 +17,11 @@ TEST(CoreReversiTest, CanPlaceOnEmptyCell) {
 }
 
 TEST(PositionTest, IsValidPosition) {
-  CellState board[BOARD_SIZE][BOARD_SIZE];
   GameState game;
   init_game(&game);
-  EXPECT_TRUE(is_valid_move(&game, {0, 0}));
-  EXPECT_TRUE(is_valid_move(&game, {7, 7}));
+  EXPECT_TRUE(is_valid_move(&game, {2, 3}));
+  EXPECT_TRUE(is_valid_move(&game, {3, 2}));
+  EXPECT_FALSE(is_valid_move(&game, {0, 0}));
   EXPECT_FALSE(is_valid_move(&game, {-1, 0}));
   EXPECT_FALSE(is_valid_move(&game, {0, 8}));
 }

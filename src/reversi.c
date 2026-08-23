@@ -46,9 +46,7 @@ Bool is_out_of_bounds(const GameState *game, Position pos) {
       pos.col >= BOARD_SIZE) {
     return TRUE; // Out of bounds
   }
-  // Additional logic to check if the move is valid according to Reversi rules
-  // can be added here.
-  return FALSE; // For now, just check if the cell is empty and within bounds
+  return FALSE;
 }
 
 Bool is_not_empty(const GameState *game, Position pos) {
@@ -59,15 +57,11 @@ Bool is_not_empty(const GameState *game, Position pos) {
 }
 
 Bool is_valid_move(const GameState *game, Position pos) {
-  if (is_out_of_bounds(game, pos)) {
-    return FALSE;
+  GameState temp = *game;
+  if (game_place_piece(&temp, pos) == MOVE_SUCCESS) {
+    return TRUE;
   }
-  if (is_not_empty(game, pos)) {
-    return FALSE;
-  }
-  // Additional logic to check if the move is valid according to Reversi rules
-  // can be added here.
-  return TRUE; // For now, just check if the cell is empty and within bounds
+  return FALSE;
 }
 
 static int flip_direction(GameState *game, Position pos, Direction dir) {
@@ -121,6 +115,8 @@ MoveResult game_place_piece(GameState *game, Position pos) {
   }
 
   game->board[pos.row][pos.col] = game->current_player;
+  game->consecutive_passes =
+      0; // Reset consecutive passes since a move was made
   game->current_player = get_opponent(game->current_player);
 
   return MOVE_SUCCESS;
